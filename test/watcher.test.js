@@ -16,11 +16,6 @@ describe('ChannelWatcher', function () {
       const watcherObj = new ChannelWatcher(99999, api)
       assert.instanceOf(watcherObj, ChannelWatcher)
     })
-
-    it('checks api is connected', function () {
-      const api = {isConnected: () => false}
-      assert.throws(() => new ChannelWatcher(99999, api), 'rippleApi must be connected')
-    })
   })
 
   describe('watch()', function () {
@@ -28,8 +23,8 @@ describe('ChannelWatcher', function () {
       this.clock = sinon.useFakeTimers({toFake: ['setInterval']})
       this.expectedInterval = 1000 * 60 * 60 // 1 hour
       this.api = {
+        connect: () => Promise.resolve(),
         isConnected: () => true,
-              // getPaymentChannel: async (id) => chans.paychan.data,
         getPaymentChannel: async (id) => chans.allPaychans.get(id)
       }
       this.watcher = new ChannelWatcher(this.expectedInterval, this.api)
@@ -46,11 +41,20 @@ describe('ChannelWatcher', function () {
       const spy = sinon.spy(this.api, 'getPaymentChannel')
       // with each clock.tick the details of the two watched channels should be loaded from rippled
       this.clock.tick(this.expectedInterval)
-      assert(spy.callCount, 2)
+      await Promise.resolve() // resolve all pending promises
+      assert.equal(spy.callCount, 2)
       this.clock.tick(this.expectedInterval)
-      assert(spy.callCount, 4)
+      await Promise.resolve() // resolve all pending promises
+      assert.equal(spy.callCount, 4)
       this.clock.tick(this.expectedInterval)
-      assert(spy.callCount, 6)
+      await Promise.resolve() // resolve all pending promises
+      assert.equal(spy.callCount, 6)
+    })
+
+    it('connects api', async () => {
+      sinon.spy(this.api, 'connect')
+      await this.watcher.watch(chans.paychan.id)
+      assert(this.api.connect.called)
     })
 
     it('throws if channel\'s settle delay is shorter than watcher\'s pollInterval', () => {
