@@ -18,8 +18,11 @@
   },
   "homepage": "https://github.com/dappelt/ilp-plugin-xrp-paychan-shared#readme",
   "dependencies": {
+    "bignum": "^0.12.5",
+    "bignumber.js": "^5.0.0",
     "debug": "^3.1.0",
     "eventemitter2": "^5.0.0",
+    "ripple-address-codec": "^2.0.1",
     "ripple-lib": "^0.17.9"
   },
   "devDependencies": {
