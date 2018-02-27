@@ -1,8 +1,7 @@
-/* global describe, it, beforeEach, afterEach */
+/* global describe, it */
 'use strict'
 
 const Util = require('../lib/util.js')
-const sinon = require('sinon')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const assert = chai.assert
