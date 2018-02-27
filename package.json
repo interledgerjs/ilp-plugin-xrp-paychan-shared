@@ -4,7 +4,7 @@
   "description": "Shared code between different XRP paychan plugins.",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul test -- _mocha",
+    "test": "nyc --reporter=lcov mocha --exit",
     "lint": "standard"
   },
   "repository": {
@@ -29,6 +29,7 @@
     "chai-as-promised": "^7.1.1",
     "istanbul": "^0.4.5",
     "mocha": "^4.0.1",
+    "nyc": "^11.4.1",
     "sinon": "^4.1.3",
     "standard": "^10.0.3"
   }
