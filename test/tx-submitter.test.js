@@ -51,25 +51,25 @@ describe('Tx Submitter', function () {
 
     it('prepares and submits a create tx', async () => {
       const {paymentChannelCreate, instructions} = fixtures.createtx
-      await this.submitter(this.api.preparePaymentChannelCreate, paymentChannelCreate, instructions)
+      await this.submitter('preparePaymentChannelCreate', paymentChannelCreate, instructions)
       assert(this.stub.calledOnce)
     })
 
     it('prepares and submits a fund tx', async () => {
       const {paymentChannelFund, instructions} = fixtures.fundtx
-      await this.submitter(this.api.preparePaymentChannelFund, paymentChannelFund, instructions)
+      await this.submitter('preparePaymentChannelFund', paymentChannelFund, instructions)
       assert(this.stub.calledOnce)
     })
 
     it('prepares and submits a claim tx', async () => {
       const {paymentChannelClaim, instructions} = fixtures.claimtx
-      await this.submitter(this.api.preparePaymentChannelClaim, paymentChannelClaim, instructions)
+      await this.submitter('preparePaymentChannelClaim', paymentChannelClaim, instructions)
       assert(this.stub.calledOnce)
     })
 
     it('prepares and submits a payment tx', async () => {
       const {payment, instructions} = fixtures.paymenttx
-      await this.submitter(this.api.preparePayment, payment, instructions)
+      await this.submitter('preparePayment', payment, instructions)
       assert(this.stub.calledOnce)
     })
 
@@ -82,9 +82,9 @@ describe('Tx Submitter', function () {
       }
       this.api.preparePaymentChannelFund = preparePaymentChannelFund
 
-      await this.submitter(this.api.preparePaymentChannelFund,
+      await this.submitter('preparePaymentChannelFund',
         this.fundtx.paymentChannelFund, this.fundtx.instructions)
-      await this.submitter(this.api.preparePaymentChannelClaim,
+      await this.submitter('preparePaymentChannelClaim',
         this.claimtx.paymentChannelClaim, this.claimtx.instructions)
 
       const parseTxType = (nthCall) => JSON.parse(nthCall.args[0]).TransactionType
