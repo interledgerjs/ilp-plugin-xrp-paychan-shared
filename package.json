@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dappelt/ilp-plugin-xrp-paychan-shared.git"
+    "url": "git+https://github.com/interledgerjs/ilp-plugin-xrp-paychan-shared.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dappelt/ilp-plugin-xrp-paychan-shared/issues"
+    "url": "https://github.com/interledgerjs/ilp-plugin-xrp-paychan-shared/issues"
   },
-  "homepage": "https://github.com/dappelt/ilp-plugin-xrp-paychan-shared#readme",
+  "homepage": "https://github.com/interledgerjs/ilp-plugin-xrp-paychan-shared#readme",
   "dependencies": {
     "bignumber.js": "^5.0.0",
     "debug": "^3.1.0",
