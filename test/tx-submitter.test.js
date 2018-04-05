@@ -9,6 +9,7 @@ const assert = chai.assert
 chai.use(chaiAsPromised)
 
 const RippleAPI = require('ripple-lib').RippleAPI
+const Store = require('ilp-store-memory')
 const fixtures = require('./data/transactions.json')
 
 describe('Tx Submitter', function () {
@@ -25,20 +26,20 @@ describe('Tx Submitter', function () {
 
   describe('instantiation', () => {
     it('is a singleton', () => {
-      const txSubmitter1 = createTxSubmitter(this.api, this.address, this.secret)
-      const txSubmitter2 = createTxSubmitter(this.api, this.address, this.secret)
+      const txSubmitter1 = createTxSubmitter(this.api, this.address, this.secret, new Store())
+      const txSubmitter2 = createTxSubmitter(this.api, this.address, this.secret, new Store())
       assert.strictEqual(txSubmitter1, txSubmitter2, 'txSubmitter expected to be a singleton')
     })
 
     it('returns an instance of TxSubmitter', () => {
-      const txSubmitter = createTxSubmitter(this.api, this.address, this.secret)
+      const txSubmitter = createTxSubmitter(this.api, this.address, this.secret, new Store())
       assert.isObject(txSubmitter)
     })
 
     it('throws on mismatching address', () => {
-      createTxSubmitter(this.api, this.address, this.secret)
+      createTxSubmitter(this.api, this.address, this.secret, new Store())
       const otherAddress = 'rSomeOtherAdress11rSomeOtherAdress'
-      assert.throws(() => createTxSubmitter(this.api, otherAddress, this.secret),
+      assert.throws(() => createTxSubmitter(this.api, otherAddress, this.secret, new Store()),
         'There exists already a TxSubmitter instance for another address')
     })
   })
@@ -77,7 +78,7 @@ describe('Tx Submitter', function () {
 
         return this.submitResult
       })
-      this.submitter = createTxSubmitter(this.api, this.address, this.secret)
+      this.submitter = createTxSubmitter(this.api, this.address, this.secret, new Store())
     })
 
     afterEach(() => {
@@ -139,6 +140,18 @@ describe('Tx Submitter', function () {
       assert.strictEqual(parseTxType(this.signStub.secondCall), 'PaymentChannelClaim')
     })
 
+    it('persists a tx before submitting it', async () => {
+      const realSubmit = this.submitter._api.submit
+      this.submitter._api.submit = async (...args) => {
+        const tx = await this.submitter._store.get(this.txId)
+        assert.isString(tx, 'expected tx to be persisted before submission')
+        return realSubmit(...args)
+      }
+
+      const {paymentChannelCreate, instructions} = fixtures.createtx
+      await this.submitter.submit('preparePaymentChannelCreate', paymentChannelCreate, instructions)
+    })
+
     describe('tx verification', () => {
       it('resolves if tx was included in a validated ledger', async () => {
         const {paymentChannelCreate, instructions} = fixtures.createtx
@@ -151,6 +164,24 @@ describe('Tx Submitter', function () {
         const {paymentChannelCreate, instructions} = fixtures.createtx
         return assert.isRejected(this.submitter.submit('preparePaymentChannelCreate',
           paymentChannelCreate, instructions), 'tx failed')
+      })
+
+      it('deletes a tx from store if tx succeded', async () => {
+        const {paymentChannelCreate, instructions} = fixtures.createtx
+        await this.submitter.submit('preparePaymentChannelCreate', paymentChannelCreate, instructions)
+
+        const tx = await this.submitter._store.get(this.txId)
+        assert.isUndefined(tx, 'expected tx to be removed from store')
+      })
+
+      it('deletes a tx from store if tx failed', async () => {
+        this.transactionResult = 'tefEXCEPTION'
+        const {paymentChannelCreate, instructions} = fixtures.createtx
+        await assert.isRejected(this.submitter.submit('preparePaymentChannelCreate',
+          paymentChannelCreate, instructions), 'tx failed')
+
+        const tx = await this.submitter._store.get(this.txId)
+        assert.isUndefined(tx, 'expected tx to be removed from store')
       })
 
       describe('queries ledger if LastLedgerSequence is reached', () => {
