@@ -1,6 +1,6 @@
 {
   "name": "ilp-plugin-xrp-paychan-shared",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "Shared code between different XRP paychan plugins.",
   "main": "index.js",
   "scripts": {
