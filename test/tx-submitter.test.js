@@ -12,6 +12,7 @@ const RippleAPI = require('ripple-lib').RippleAPI
 const Store = require('ilp-store-memory')
 const fixtures = require('./data/transactions.json')
 
+// TODO fix two broken tests
 describe('Tx Submitter', function () {
   before(async () => {
     this.createtx = fixtures.createtx
@@ -25,7 +26,7 @@ describe('Tx Submitter', function () {
   })
 
   describe('instantiation', () => {
-    it('is a singleton', () => {
+    it('one txSubmitter per address', () => {
       const txSubmitter1 = createTxSubmitter(this.api, this.address, this.secret, new Store())
       const txSubmitter2 = createTxSubmitter(this.api, this.address, this.secret, new Store())
       assert.strictEqual(txSubmitter1, txSubmitter2, 'txSubmitter expected to be a singleton')
@@ -36,11 +37,17 @@ describe('Tx Submitter', function () {
       assert.isObject(txSubmitter)
     })
 
-    it('throws on mismatching address', () => {
-      createTxSubmitter(this.api, this.address, this.secret, new Store())
-      const otherAddress = 'rSomeOtherAdress11rSomeOtherAdress'
-      assert.throws(() => createTxSubmitter(this.api, otherAddress, this.secret, new Store()),
-        'There exists already a TxSubmitter instance for another address')
+    it('makes two submitters for different addresses', () => {
+      const txSubmitter1 = createTxSubmitter(this.api, this.address, this.secret, new Store())
+
+      const otherAddress = 'rNtnt7i1LXjyHLrmFQMA4F6CxvY57Est5T'
+      const otherSecret = 'ssJimN41FfXoucWshFiMiAfcseE5o'
+      const otherApi = new RippleAPI({server: 'wss://s.altnet.rippletest.net:51233'})
+      const txSubmitter2 = createTxSubmitter(otherApi, otherAddress, otherSecret, new Store())
+
+      const sym = Symbol.for('ilp-plugin-xrp-paychan-shared-txsubmitter')
+      assert.strictEqual(global[sym][this.address], txSubmitter1, 'submitter should be stored')
+      assert.strictEqual(global[sym][otherAddress], txSubmitter2, 'submitter should be stored')
     })
   })
 
@@ -206,11 +213,13 @@ describe('Tx Submitter', function () {
         })
 
         it('resolves if tx was succesful', () => {
+          this.timeout(3000)
           this.getTransactionStub.resolves({outcome: {result: 'tesSUCCESS'}})
           return this.submitter.submit('preparePayment', this.paymentOpts, this.paymentInstructions)
         })
 
         it('rejects if tx not found', () => {
+          this.timeout(3000)
           this.getTransactionStub.rejects(new this.api.errors.NotFoundError())
           return assert.isRejected(this.submitter.submit('preparePayment', this.paymentOpts,
             this.paymentInstructions), 'Not found')
